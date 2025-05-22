@@ -193,7 +193,7 @@ export default function AddDepartment() {
       // alert("Département créé avec succès !");
 
       console.log("[handleSubmit] Redirection vers /departement..."); // Log avant redirection
-      router.push("/departement"); // Redirection vers la liste
+      router.push("/organisations/departement"); // Redirection vers la liste
 
     } catch (error: unknown) { // Utiliser unknown
       const errorMessage = error instanceof Error ? error.message : "Erreur inconnue lors de la création";
