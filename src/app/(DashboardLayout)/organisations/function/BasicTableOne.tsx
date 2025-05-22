@@ -279,74 +279,73 @@ export default function FunctionsPage() {
     setIsEditModalOpen(true);
   };
 
-  // --- useEffect pour charger les fonctions (adapté à l'API locale) ---
-  useEffect(() => {
-    async function fetchFunctions() {
-      setLoading(true);
-      setError(null);
-      setNotification(null); // Effacer les anciennes notifications
-      const token = Cookies.get('authTokens');
-      if (!token) {
-        console.error("Token d'accès introuvable");
-        setError("Non authentifié. Impossible de charger les fonctions.");
-        setLoading(false);
-        return;
-      }
-
-      let accessToken;
-      try {
-        accessToken = JSON.parse(token).access;
-      } catch (e) {
-        console.error("Erreur parsing token:", e);
-        setError("Session invalide. Veuillez vous reconnecter.");
-        setLoading(false);
-        return;
-      }
-
-      console.log("Token d'accès trouvé. Tentative de récupération des fonctions...");
-      try {
-        // --- MODIFICATION: Utilisation de l'URL locale ---
-        const response = await fetch(API_URLS.GET_FUNCTIONS, {
-        // --- FIN MODIFICATION ---
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${accessToken}`,
-          },
-        });
-
-        if (!response.ok) {
-          let errorMsg = `Erreur HTTP: ${response.status}`;
-          try {
-            const errorData = await response.json();
-            errorMsg = errorData.detail || errorMsg;
-          } catch { /* Ignorer */ }
-          throw new Error(errorMsg);
-        }
-
-        const data = await response.json();
-        // L'API semble retourner directement le tableau, ajustons la vérification
-        if (Array.isArray(data)) {
-          console.log("Fonctions récupérées avec succès:", data);
-          setFunctions(data);
-        } else if (data && Array.isArray(data.functions)) { // Garder la vérification précédente au cas où
-           console.log("Fonctions récupérées avec succès (structure imbriquée):", data.functions);
-           setFunctions(data.functions);
-        }
-         else {
-          console.warn("Structure de données inattendue reçue de l'API:", data);
-          setFunctions([]);
-          setError("Réponse inattendue du serveur.");
-        }
-      } catch (error) {
-        console.error("Erreur lors de la récupération des fonctions:", error);
-        setError(error instanceof Error ? error.message : "Impossible de charger les fonctions.");
-        setFunctions([]); // Vider en cas d'erreur
-      } finally {
-        setLoading(false);
-      }
+  async function fetchFunctions() {
+    setLoading(true);
+    setError(null);
+    setNotification(null); // Effacer les anciennes notifications
+    const token = Cookies.get('authTokens');
+    if (!token) {
+      console.error("Token d'accès introuvable");
+      setError("Non authentifié. Impossible de charger les fonctions.");
+      setLoading(false);
+      return;
     }
 
+    let accessToken;
+    try {
+      accessToken = JSON.parse(token).access;
+    } catch (e) {
+      console.error("Erreur parsing token:", e);
+      setError("Session invalide. Veuillez vous reconnecter.");
+      setLoading(false);
+      return;
+    }
+
+    console.log("Token d'accès trouvé. Tentative de récupération des fonctions...");
+    try {
+      // --- MODIFICATION: Utilisation de l'URL locale ---
+      const response = await fetch(API_URLS.GET_FUNCTIONS, {
+      // --- FIN MODIFICATION ---
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        let errorMsg = `Erreur HTTP: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMsg = errorData.detail || errorMsg;
+        } catch { /* Ignorer */ }
+        throw new Error(errorMsg);
+      }
+
+      const data = await response.json();
+      // L'API semble retourner directement le tableau, ajustons la vérification
+      if (Array.isArray(data)) {
+        console.log("Fonctions récupérées avec succès:", data);
+        setFunctions(data);
+      } else if (data && Array.isArray(data.functions)) { // Garder la vérification précédente au cas où
+         console.log("Fonctions récupérées avec succès (structure imbriquée):", data.functions);
+         setFunctions(data.functions);
+      }
+       else {
+        console.warn("Structure de données inattendue reçue de l'API:", data);
+        setFunctions([]);
+        setError("Réponse inattendue du serveur.");
+      }
+    } catch (error) {
+      console.error("Erreur lors de la récupération des fonctions:", error);
+      setError(error instanceof Error ? error.message : "Impossible de charger les fonctions.");
+      setFunctions([]); // Vider en cas d'erreur
+    } finally {
+      setLoading(false);
+    }
+  }
+  // --- useEffect pour charger les fonctions (adapté à l'API locale) ---
+  useEffect(() => {
     fetchFunctions();
   }, []);
 
@@ -469,8 +468,7 @@ export default function FunctionsPage() {
             department_id: editForm.department_id,
           });
           setIsEditModalOpen(false);
-          // Optionnel : recharger la liste
-          // fetchFunctions();
+          fetchFunctions();
         }}
       >
         <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Modifier la Fonction</h2>
@@ -560,7 +558,7 @@ export default function FunctionsPage() {
 
             <div className="flex gap-3">
               {/* --- MODIFICATION: Utilisation de Link pour Nouvelle fonction --- */}
-              <Link href="/function/create/" passHref>
+              <Link href="/organisations/function/create/">
                 <button
                   className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
                 >

@@ -161,7 +161,7 @@ export default function CreateGroupPage() {
       }
   
       try {
-        const response = await fetch("https://www.backend.lnb-intranet.globalitnet.org/utilisateurs/list-users/", {
+        const response = await fetch("https://www.backend.lnb-intranet.globalitnet.org/utilisateurs/user-gestion/list-all-users/", {
           headers: {
             "Authorization": `Bearer ${JSON.parse(token).access}`,
           },

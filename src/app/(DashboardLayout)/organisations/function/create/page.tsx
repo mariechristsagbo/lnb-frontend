@@ -88,7 +88,7 @@ export default function CreateFunction() {
         throw new Error(data.message || `Erreur HTTP: ${response.status}`);
       }
 
-      router.push("/function");
+      router.push("/organisations/function");
     } catch (error) {
       console.error("Erreur lors de la création de la fonction:", error);
       setError("Erreur lors de la création de la fonction");
