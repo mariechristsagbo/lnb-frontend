@@ -81,37 +81,39 @@ export default function NotificationDropdown() {
   };
 
   // Mémoriser fetchNotificationCount avec useCallback
-  // Ajout d'un argument pour savoir si c'est un check périodique
   const fetchNotificationCount = useCallback(async (isPeriodicCheck = false) => {
     try {
       const headers = getAuthHeaders();
       if (!headers) return;
 
-      const response = await fetch(API_URLS.NOTIFICATIONS_COUNT, { headers });
+      const response = await fetch(API_URLS.NOTIFICATIONS_COUNT, { 
+        headers,
+        cache: 'no-store' // Empêcher la mise en cache
+      });
+      
       if (response.ok) {
         const count = await response.json();
-        const currentCount = notificationCount; // Sauvegarde la valeur actuelle avant mise à jour
-
-        // Vérifie les nouvelles notifications seulement lors des checks périodiques
-        // et si le dropdown est fermé et si le nouveau compte est supérieur à l'ancien
-        if (isPeriodicCheck && !isOpen && count > currentCount) {
-           setHasNewNotifications(true);
-        }
-
-        setNotificationCount(count);
+        
+        // Mise à jour optimisée de l'état
+        setNotificationCount(prevCount => {
+          // Vérifie les nouvelles notifications seulement lors des checks périodiques
+          if (isPeriodicCheck && !isOpen && count > prevCount) {
+            setHasNewNotifications(true);
+          }
+          // Retourne la nouvelle valeur seulement si elle est différente
+          return count === prevCount ? prevCount : count;
+        });
 
         // Au chargement initial, ne pas montrer l'indicateur 'nouveau'
         if (isInitialMount.current) {
-            setHasNewNotifications(false);
-            isInitialMount.current = false;
+          setHasNewNotifications(false);
+          isInitialMount.current = false;
         }
-
       }
     } catch (err) {
       console.error("Erreur lors de la récupération du nombre de notifications:", err);
     }
-  // Ajout de isOpen et notificationCount aux dépendances
-  }, [isOpen, notificationCount]); // notificationCount est nécessaire ici pour la comparaison
+  }, [isOpen]); // Retirer notificationCount des dépendances
 
   // Fonction pour récupérer les notifications
   const fetchNotifications = async () => {
@@ -209,16 +211,29 @@ export default function NotificationDropdown() {
 
   // Récupérer le compteur de notifications au chargement et périodiquement
   useEffect(() => {
-    // Fetch initial
-    fetchNotificationCount(false); // false pour le fetch initial
-
+    let isMounted = true;
+    
+    // Fonction pour le chargement initial
+    const initialFetch = async () => {
+      if (isMounted) {
+        await fetchNotificationCount(false);
+      }
+    };
+    
+    initialFetch();
+    
     // Intervalle pour les checks périodiques
     const interval = setInterval(() => {
-      fetchNotificationCount(true); // true pour les checks périodiques
+      if (isMounted) {
+        fetchNotificationCount(true);
+      }
     }, 60000); // Toutes les 60 secondes
 
-    // Nettoyage de l'intervalle au démontage
-    return () => clearInterval(interval);
+    // Nettoyage
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, [fetchNotificationCount]); // Dépend de la fonction mémoïsée
 
   return (
