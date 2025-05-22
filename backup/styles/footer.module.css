@@ -1,0 +1,23 @@
+.footer {
+    padding: 20px;
+    text-align: center;
+}
+
+/* Position fixe pour l'icône de chat */
+.chatIcon {
+    position: fixed;
+    bottom: 20px;
+    /* Distance du bas de l'écran */
+    right: 20px;
+    /* Distance du côté droit de l'écran */
+    z-index: 1000;
+    /* Assurez-vous que l'icône se superpose aux autres éléments */
+}
+
+.chatImage {
+    width: 50px;
+    /* Ajustez la taille de l'image selon vos besoins */
+    height: 50px;
+    cursor: pointer;
+    /* Pour donner un effet cliquable */
+}

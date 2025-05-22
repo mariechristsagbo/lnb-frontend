@@ -1,0 +1,133 @@
+/* navbar.module.css */
+.navbar {
+    padding: 10px 20px;
+    background-color: #f8f9fa;
+    /* Fond clair */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    /* Ombre légère */
+}
+
+.logoContainer {
+    display: flex;
+    align-items: center;
+}
+
+.logo {
+    max-width: 100%;
+    height: auto;
+}
+
+.searchInput {
+    border-radius: 30px;
+    padding-left: 10px;
+    border: 1px solid #ccc;
+}
+
+.searchButton {
+    background-color: transparent;
+    border: none;
+    font-size: 20px;
+    color: #555;
+}
+
+.searchButton:hover {
+    color: #026549;
+}
+
+.accountContainer {
+    display: flex;
+    align-items: center;
+}
+
+.accountLink {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: #333;
+}
+
+.accountTitle {
+    margin-left: 10px;
+    font-weight: 600;
+}
+
+.accountIcon {
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+@media (max-width: 991px) {
+    .navbar-brand {
+        display: flex;
+        align-items: center;
+    }
+
+    .d-md-none {
+        display: block;
+    }
+}
+
+/* navbar.module.css */
+.navbar {
+    padding: 10px 20px;
+}
+
+.logoContainer {
+    display: flex;
+    align-items: center;
+}
+
+.logo {
+    max-width: 100%;
+    height: auto;
+}
+
+.searchInput {
+    border-radius: 30px;
+    padding-left: 10px;
+    border: 1px solid #ccc;
+}
+
+.searchButton {
+    background-color: transparent;
+    border: none;
+    font-size: 20px;
+    color: #555;
+}
+
+.searchButton:hover {
+    color: #026549;
+}
+
+.accountContainer {
+    display: flex;
+    align-items: center;
+}
+
+.accountLink {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: #333;
+}
+
+.accountTitle {
+    margin-left: 10px;
+    font-weight: 600;
+}
+
+.accountIcon {
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+@media (max-width: 991px) {
+    .navbar-brand {
+        display: flex;
+        align-items: center;
+    }
+
+    .d-md-none {
+        display: block;
+    }
+}

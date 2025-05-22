@@ -1,0 +1,13 @@
+/* clock.module.css */
+.clock {
+    font-size: 1.5rem;
+    color: var(--title-color);
+    text-align: center;
+  }
+
+/* styles.css */
+.clock-style {
+    font-size: 1.5rem;
+    color: var(--title-color);
+    text-align: center;
+  }

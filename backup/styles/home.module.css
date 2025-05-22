@@ -1,0 +1,95 @@
+/* styles/Home.module.css */
+.container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.mainNav {
+    padding: 1rem;
+    background-color: white;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.navButton {
+    padding: 0.5rem 1rem;
+    margin-right: 1rem;
+    background-color: #48bb78;
+    color: white;
+    border: none;
+    border-radius: 0.25rem;
+    cursor: pointer;
+}
+
+.mainContent {
+    display: flex;
+    flex: 1;
+}
+
+.sidebar {
+    width: 250px;
+    background-color: white;
+    padding: 1rem;
+    border-right: 1px solid #e2e8f0;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+}
+
+.sidebar li {
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    background-color: #48bb78;
+    color: white;
+    border-radius: 0.25rem;
+    cursor: pointer;
+}
+
+.sidebarButton {
+    width: 100%;
+    padding: 0.85rem;
+    background-color: #48bb78;
+    color: white;
+    border: none;
+    border-radius: 0.25rem;
+    margin-top: 1rem;
+    cursor: pointer;
+}
+
+
+/* Styles pour le carousel */
+.carousel-container {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+}
+
+.carousel-slide {
+    display: flex;
+    animation: slide 15s infinite linear;
+}
+
+.carousel-item {
+    width: 100%;
+    flex-shrink: 0;
+}
+
+@keyframes slide {
+    0% {
+        transform: translateX(0);
+    }
+
+    33% {
+        transform: translateX(-100%);
+    }
+
+    66% {
+        transform: translateX(-200%);
+    }
+
+    100% {
+        transform: translateX(0);
+    }
+}
