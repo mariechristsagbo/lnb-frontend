@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import ComponentCard from "@/components/common/ComponentCard";
 import Label from "../Label";
 import Input from "../InputField";
@@ -44,6 +45,7 @@ export default function ServiceForm() {
   const [users, setUsers] = useState<User[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -129,6 +131,7 @@ export default function ServiceForm() {
       });
 
       if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
+      router.push("/organisations/services");
 
       // Redirection ou notification de succès
     } catch (error) {

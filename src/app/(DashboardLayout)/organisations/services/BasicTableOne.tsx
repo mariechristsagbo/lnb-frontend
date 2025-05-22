@@ -395,52 +395,54 @@ export default function ServicesPage() {
     )
   );
 
+
+  const fetchServices = async () => {
+    setIsLoading(true); // Commence le chargement
+    setError(null); // Réinitialise l'erreur
+    const token = Cookies.get('authTokens');
+    if (!token) {
+      setError("Non authentifié. Impossible de récupérer les services.");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const accessToken = JSON.parse(token).access;
+      // **Vérifiez cette URL**
+      const response = await fetch("https://www.backend.lnb-intranet.globalitnet.org/services/list-services/", { 
+        method: "GET", // Assurez-vous que c'est GET
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${accessToken}`, // Assurez-vous que le token est nécessaire et correct
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erreur HTTP: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Services récupérés:", data); 
+
+      // MODIFICATION ICI: Vérifier si data.services est un tableau
+      if (data && Array.isArray(data.services)) {
+          setServices(data.services); // Utiliser data.services au lieu de data
+      } else {
+          console.error("La propriété 'services' dans la réponse de l'API n'est pas un tableau ou est manquante:", data);
+          setServices([]); // Garder la liste vide en cas de format inattendu
+      }
+
+    } catch (err) {
+      console.error("Erreur lors de la récupération des services:", err);
+      setError(`Impossible de charger les services. ${err instanceof Error ? err.message : ''}`);
+      setServices([]); // Vider les services en cas d'erreur
+    } finally {
+      setIsLoading(false); // Fin du chargement
+    }
+  };
+
+
   useEffect(() => {
-    const fetchServices = async () => {
-      setIsLoading(true); // Commence le chargement
-      setError(null); // Réinitialise l'erreur
-      const token = Cookies.get('authTokens');
-      if (!token) {
-        setError("Non authentifié. Impossible de récupérer les services.");
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        const accessToken = JSON.parse(token).access;
-        // **Vérifiez cette URL**
-        const response = await fetch("https://www.backend.lnb-intranet.globalitnet.org/services/list-services/", { 
-          method: "GET", // Assurez-vous que c'est GET
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${accessToken}`, // Assurez-vous que le token est nécessaire et correct
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(`Erreur HTTP: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log("Services récupérés:", data); 
-
-        // MODIFICATION ICI: Vérifier si data.services est un tableau
-        if (data && Array.isArray(data.services)) {
-            setServices(data.services); // Utiliser data.services au lieu de data
-        } else {
-            console.error("La propriété 'services' dans la réponse de l'API n'est pas un tableau ou est manquante:", data);
-            setServices([]); // Garder la liste vide en cas de format inattendu
-        }
-
-      } catch (err) {
-        console.error("Erreur lors de la récupération des services:", err);
-        setError(`Impossible de charger les services. ${err instanceof Error ? err.message : ''}`);
-        setServices([]); // Vider les services en cas d'erreur
-      } finally {
-        setIsLoading(false); // Fin du chargement
-      }
-    };
-
     fetchServices();
   }, []); // Le tableau vide assure que l'effet s'exécute une seule fois au montage
 
@@ -575,7 +577,7 @@ export default function ServicesPage() {
       setShowEditModal(false);
       setServiceToEdit(null);
       setNotification({ type: "success", message: "Service modifié avec succès." });
-
+      fetchServices();
     } catch (error) {
       console.error("Erreur lors de la modification du service:", error);
       setNotification({ type: "error", message: `Impossible de modifier le service. ${error instanceof Error ? error.message : ''}` });
@@ -649,7 +651,7 @@ export default function ServicesPage() {
               </div>
             </div>
             <div className="flex gap-3">
-              <Link href="/services/addservice/" passHref>
+              <Link href="/organisations/services/addservice/">
                 <button
                   className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
                 >
