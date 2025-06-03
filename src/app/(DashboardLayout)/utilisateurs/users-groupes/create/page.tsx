@@ -4,45 +4,48 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import ComponentCard from "@/components/common/ComponentCard";
 import Cookies from "js-cookie";
+import { groupService, userService, role } from "../apiService/groupService";
 
 // Modifiez l'interface User pour correspondre au format de l'API
-interface User {
+
+export interface User {
   id: number;
   nom: string;
   prenom: string;
   email: string;
   username: string;
 }
-
 interface GroupFormData {
-  name: string;
-  email: string;
-  phone: string;
-  role: string;
-  bio: string;
-  adresse: string;
-  group_type: string;
-  department: string;
-  function: string;
-  project: string;
-  auto_assign: boolean;
-  role_id: number;
-  photo: string;
-  created_by: number;
+  name: string;           // *
+  email: string;          // *
+  phone: string;          // *
+  role: string;           
+  bio: string;            // *
+  adresse: string;        // * (ville uniquement)
+  group_type: string;     // * (logique ou physique)
+  department: string;     
+  function: string;       
+  project: string;        
+  auto_assign: boolean;   
+  role_id: number;        
+  photo: File | string;   
+  created_by: number;     
 }
 
 interface SubgroupFormData {
-  parent_group_id: number;
-  name: string;
-  email: string;
-  phone: string;
-  role: string;
-  bio: string;
-  adresse: string;
-  department: string;
-  function: string;
-  project: string;
-  photo: string;
+  parent_group_id: number;  // *
+  name: string;            // *
+  email: string;           // *
+  phone: string;           // *
+  role: string;            
+  bio: string;             // *
+  adresse: string;         // * (ville uniquement)
+  department: string;      
+  function: string;        
+  project: string;         
+  photo: File | string;    
+  created_by: number;      // ID de l'utilisateur qui crée le sous-groupe
+  role_id: number;
 }
 
 interface DialogState {
@@ -59,6 +62,7 @@ interface ParentGroup {
 export default function CreateGroupPage() {
   const router = useRouter();
   const [isSubgroup, setIsSubgroup] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [formData, setFormData] = useState<GroupFormData>({
     name: "",
     email: "",
@@ -66,18 +70,18 @@ export default function CreateGroupPage() {
     role: "",
     bio: "",
     adresse: "",
-    group_type: "",
+    group_type: "logique", // Valeur par défaut
     department: "",
     function: "",
     project: "",
     auto_assign: false,
-    role_id: 0,
+    role_id: 1, // Valeur par défaut
     photo: "",
-    created_by: 0
+    created_by: 1 // À remplacer par l'ID de l'utilisateur connecté
   });
   
   const [subgroupData, setSubgroupData] = useState<SubgroupFormData>({
-    parent_group_id: 0,
+    parent_group_id: 0, // Sera mis à jour lors de la sélection du groupe parent
     name: "",
     email: "",
     phone: "",
@@ -87,7 +91,9 @@ export default function CreateGroupPage() {
     department: "",
     function: "",
     project: "",
-    photo: ""
+    photo: "",
+    created_by: 0,
+    role_id: 1,
   });
 
   // Préfixer les états non utilisés avec _
@@ -107,6 +113,11 @@ export default function CreateGroupPage() {
   const [parentGroups, setParentGroups] = useState<ParentGroup[]>([]);
   const [availableUsers, setAvailableUsers] = useState<User[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
+  const [departments, setDepartments] = useState<Array<{id: number, name: string}>>([]);
+  const [roles, setRoles] = useState<any[]>([]);
+  const [hierarchy_levels, setHierarchy_levels] = useState<any[]>([]);
+
+  const  baseUrl = 'https://www.backend.lnb-intranet.globalitnet.org/utilisateurs_groupes/'
 
   // Charger les groupes parents pour le sous-groupe
   useEffect(() => {
@@ -154,85 +165,133 @@ export default function CreateGroupPage() {
   // Modifiez la partie du useEffect qui charge les utilisateurs
   useEffect(() => {
     const fetchUsers = async () => {
-      const token = Cookies.get('authTokens');
-      if (!token) {
-        setError("Non authentifié");
-        return;
-      }
-  
       try {
-        const response = await fetch("https://www.backend.lnb-intranet.globalitnet.org/utilisateurs/user-gestion/list-all-users/", {
-          headers: {
-            "Authorization": `Bearer ${JSON.parse(token).access}`,
-          },
-        });
-        
-        if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
-  
-        const data = await response.json();
-        if (data && data.utilisateurs) {
-          console.log("Utilisateurs chargés:", data.utilisateurs); // Pour le débogage
-          setAvailableUsers(data.utilisateurs);
-        } else {
-          console.error("Format de données inattendu:", data);
-          setError("Format de données incorrect");
-        }
+        const data = await userService.getAllUsers();
+        setAvailableUsers(data.utilisateurs);
       } catch (error) {
         console.error("Erreur lors du chargement des utilisateurs:", error);
         setError("Impossible de charger la liste des utilisateurs");
       }
     };
-  
     fetchUsers();
   }, []);
 
+  //  useEffect(() => {
+  //     async function fetchDepartments() {
+  //       try {
+  //         const data = await userService.getDepartments();
+  //         setDepartments(data.departments);
+  //       } catch (error) {
+  //         console.error("Erreur lors du chargement des départements:", error);
+  //         setError("Impossible de charger les départements");
+  //       }
+  //     }
+
+
+  //     fetchDepartments();
+  //   }, []);
+
+    useEffect(() => {
+      const fetchUserProfile = async () => {
+        try {
+          const userProfile = await userService.getUserProfile();
+          console.log("Profil utilisateur chargé:", userProfile);
+          
+          // Stocker l'ID de l'utilisateur dans l'état
+          setCurrentUserId(userProfile.utilisateur.id);
+          console.log("ID de l'utilisateur 1:", userProfile.utilisateur.id), console.log("ID de l'utilisateur:", currentUserId);
+        } catch (error) {
+          console.error("Erreur lors du chargement du profil de l'utilisateur:", error);
+          setError("Impossible de charger le profil de l'utilisateur");
+        }
+      };
+      fetchUserProfile();
+    }, []);
+
+    useEffect(() => {
+      const fetchRoles = async () => {
+        try {
+          const data = await role();
+          console.log("Rôles chargés:", data);
+          setDepartments(data?.departments);
+          setRoles(data.roles);
+          setHierarchy_levels(data.hierarchy_levels);
+        } catch (error) {
+          console.error("Erreur lors du chargement des rôles:", error);
+          setError("Impossible de charger les rôles");
+        }
+      }
+      fetchRoles();
+    }, []);
+  
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
-    setError(null);
-
-    const token = Cookies.get('authTokens');
-    if (!token) {
-      setError("Non authentifié");
-      setIsLoading(false);
-      return;
-    }
-
-    const accessToken = JSON.parse(token).access;
+    setError("");
+  
     try {
-      const url = isSubgroup
-        ? "https://www.backend.lnb-intranet.globalitnet.org/utilisateurs_groupes/create-subgroup/"
-        : "https://www.backend.lnb-intranet.globalitnet.org/utilisateurs_groupes/create-group/";
-
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify(isSubgroup ? subgroupData : formData),
-      });
-
-      if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
-
-      const newGroup = await response.json();
-
-      // Si des utilisateurs ont été sélectionnés, les ajouter au groupe
-      if (selectedUsers.length > 0) {
-        await fetch(`https://www.backend.lnb-intranet.globalitnet.org/utilisateurs_groupes/add-members-to-group/${newGroup.id}/`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({ member_ids: selectedUsers }),
-        });
+      if (!currentUserId) {
+        throw new Error("ID utilisateur non disponible");
       }
 
-      router.push("/users-groupes");
+      // Préparer les données pour l'envoi
+      const formDataToSend = new FormData();
+      
+      // Créer une copie des données du formulaire et s'assurer que created_by est défini
+      const formDataCopy = { ...formData, created_by: currentUserId };
+      const subgroupDataCopy = { ...subgroupData, created_by: currentUserId };
+      
+      // Sélectionner les données à utiliser
+      const data = isSubgroup ? subgroupDataCopy : formDataCopy;
+
+      console.log("Données à envoyer:", data);
+      
+      // Ajouter tous les champs au FormData
+      Object.entries(data).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          // Convertir les booléens en chaînes
+          const finalValue = typeof value === 'boolean' ? String(value) : value;
+          formDataToSend.append(key, finalValue instanceof File ? finalValue : String(finalValue));
+        }
+      });
+      
+      // S'assurer que created_by est bien dans le FormData
+      if (!formDataToSend.has('created_by')) {
+        formDataToSend.append('created_by', String(currentUserId));
+      }
+      
+      // Vérification finale du FormData
+      console.log("=== VÉRIFICATION FORMDATA ===");
+      for (let pair of formDataToSend.entries()) {
+        console.log(pair[0] + ': ', pair[1]);
+      }
+  
+      // Utiliser le service approprié pour créer le groupe ou sous-groupe
+      const createAction = isSubgroup 
+        ? groupService.createSubgroup
+        : groupService.createGroup;
+  
+      const { id: groupId } = await createAction(formDataToSend);
+  
+      // Si des utilisateurs ont été sélectionnés, les ajouter au groupe
+      if (selectedUsers.length > 0) {
+        try {
+          await groupService.addGroupMembers(groupId, selectedUsers);
+        } catch (addMemberError) {
+          console.error("Erreur lors de l'ajout des membres:", addMemberError);
+          // On continue même si l'ajout des membres échoue, car le groupe a été créé
+        }
+      }
+  
+      // Afficher un message de succès
+      alert(isSubgroup ? "Sous-groupe créé avec succès!" : "Groupe créé avec succès!");
+      
+      // Rediriger vers la liste des groupes
+      router.push('/utilisateurs/users-groupes');
+      
     } catch (error) {
-      console.error("Erreur lors de la création:", error);
-      setError("Erreur lors de la création du groupe");
+      console.error("Erreur lors de la création du groupe:", error);
+      setError(error instanceof Error ? error.message : "Une erreur inconnue est survenue");
     } finally {
       setIsLoading(false);
     }
@@ -348,14 +407,14 @@ export default function CreateGroupPage() {
             )}
           </div>
 
-          <div className="mb-6">
+          {/* <div className="mb-6">
             <button
               onClick={() => setIsSubgroup(!isSubgroup)}
               className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400"
             >
               {isSubgroup ? "Créer un groupe principal" : "Créer un sous-groupe"}
             </button>
-          </div>
+          </div> */}
 
           {error && (
             <div className="mb-6 p-4 text-red-700 bg-red-100 rounded-lg">
@@ -371,7 +430,7 @@ export default function CreateGroupPage() {
                 </label>
                 <select
                   value={subgroupData.parent_group_id}
-                  onChange={(e) => setSubgroupData({ ...subgroupData, parent_group_id: Number(e.target.value) })}
+                  onChange={(e) => setSubgroupData(prev => ({ ...prev, parent_group_id: Number(e.target.value) }))}
                   className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   required
                 >
@@ -399,32 +458,213 @@ export default function CreateGroupPage() {
                   type="text"
                   value={isSubgroup ? subgroupData.name : formData.name}
                   onChange={(e) => isSubgroup 
-                    ? setSubgroupData({ ...subgroupData, name: e.target.value })
+                    ? setSubgroupData(prev => ({ ...prev, name: e.target.value }))
                     : setFormData({ ...formData, name: e.target.value })
                   }
                   className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   required
+                  placeholder="Nom du groupe"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                  Email
+                  Email *
                 </label>
                 <input
                   type="email"
                   value={isSubgroup ? subgroupData.email : formData.email}
                   onChange={(e) => isSubgroup
-                    ? setSubgroupData({ ...subgroupData, email: e.target.value })
+                    ? setSubgroupData(prev => ({ ...prev, email: e.target.value }))
                     : setFormData({ ...formData, email: e.target.value })
                   }
                   className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  required
+                  placeholder="email@groupe.com"
                 />
               </div>
             </div>
 
-            {/* Autres champs du formulaire */}
-            {/* ... Ajoutez les autres champs nécessaires ... */}
+            {/* Champs supplémentaires */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                  Téléphone *
+                </label>
+                <input
+                  type="tel"
+                  value={isSubgroup ? subgroupData.phone : formData.phone}
+                  onChange={(e) => isSubgroup
+                    ? setSubgroupData(prev => ({ ...prev, phone: e.target.value }))
+                    : setFormData({ ...formData, phone: e.target.value })
+                  }
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  required
+                  placeholder="+33 1 23 45 67 89"
+                />
+              </div>
+
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                Rôle
+                </label>
+                <select
+                  value={isSubgroup ? subgroupData.role_id : formData.role_id}
+                  onChange={(e) => isSubgroup
+                    ? setSubgroupData(prev => ({ ...prev, role_id: Number(e.target.value) }))
+                    : setFormData({ ...formData, role_id: Number(e.target.value) })}
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                >
+                  <option value="">Sélectionnez un rôle</option>
+                  {roles.map((role) => (
+                    <option key={role.id} value={role.id}>
+                      {role.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+            
+              {!isSubgroup && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                    Type de groupe *
+                  </label>
+                  <select
+                    value={formData.group_type}
+                    onChange={(e) => setFormData({ ...formData, group_type: e.target.value })}
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    required
+                  >
+                    <option value="logique">Logique</option>
+                    <option value="physique">Physique</option>
+                  </select>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                  Département
+                </label>
+                <select
+                  value={isSubgroup ? subgroupData.department : formData.department}
+                  onChange={(e) => isSubgroup
+                    ? setSubgroupData(prev => ({ ...prev, department: e.target.value }))
+                    : setFormData({ ...formData, department: e.target.value })}
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                >
+                  <option value="">Sélectionnez un département</option>
+                  {departments.map((dept) => (
+                    <option key={dept.id} value={dept.id}>
+                      {dept.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                  Fonction
+                </label>
+                <select
+                  value={isSubgroup ? subgroupData.function : formData.function}
+                  onChange={(e) => isSubgroup
+                    ? setSubgroupData(prev => ({ ...prev, function: e.target.value }))
+                    : setFormData({ ...formData, function: e.target.value })}
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                >
+                  <option value="">Sélectionnez une fonction</option>
+                  {hierarchy_levels.map((fonction) => (
+                    <option key={fonction.id} value={fonction.id}>
+                      {fonction.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+             
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                  Projet
+                </label>
+                <input
+                  type="text"
+                  value={isSubgroup ? subgroupData.project : formData.project}
+                  onChange={(e) => isSubgroup
+                    ? setSubgroupData(prev => ({ ...prev, project: e.target.value }))
+                    : setFormData({ ...formData, project: e.target.value })
+                  }
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  placeholder="Nom du projet"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                  Bio *
+                </label>
+                <textarea
+                  value={isSubgroup ? subgroupData.bio : formData.bio}
+                  onChange={(e) => isSubgroup
+                    ? setSubgroupData(prev => ({ ...prev, bio: e.target.value }))
+                    : setFormData({ ...formData, bio: e.target.value })
+                  }
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  rows={3}
+                  required
+                  placeholder="Description du groupe"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                  Photo du groupe
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        if (isSubgroup) {
+                          setSubgroupData(prev => ({ ...prev, photo: file }));
+                        } else {
+                          setFormData({ ...formData, photo: file });
+                        }
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                  className="w-full text-sm text-gray-500
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded-md file:border-0
+                    file:text-sm file:font-semibold
+                    file:bg-blue-50 file:text-blue-700
+                    hover:file:bg-blue-100"
+                />
+              </div>
+
+              {!isSubgroup && (
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="auto_assign"
+                    checked={formData.auto_assign}
+                    onChange={(e) => setFormData({ ...formData, auto_assign: e.target.checked })}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="auto_assign" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                    Attribution automatique des utilisateurs
+                  </label>
+                </div>
+              )}
+            </div>
+
+            {/* Champs cachés avec valeurs par défaut */}
+            <input type="hidden" name="role_id" value={formData.role_id} />
+            <input type="hidden" name="created_by" value={formData.created_by} />
 
             {/* Sélection des membres */}
             <div>

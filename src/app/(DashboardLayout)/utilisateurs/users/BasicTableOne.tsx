@@ -528,7 +528,7 @@ export default function UsersPage() {
             </div>
 
             <div className="flex gap-3">
-              <Link href="/users/add">
+              <Link href="/utilisateurs/users/add">
                 <button className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors duration-200 font-medium">
                   <PlusIcon className="w-4 h-4 mr-2" />
                   Nouvel utilisateur
@@ -799,7 +799,7 @@ export default function UsersPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <div className="flex items-center justify-end space-x-2">
-                            <Link href={`/users/${user.id}`}>
+                            <Link href={`/utilisateurs/users/${user.id}`}>
                               <button className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300" title="Voir les détails">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -807,7 +807,7 @@ export default function UsersPage() {
                                 </svg>
                               </button>
                             </Link>
-                            <Link href={`/users/edit/${user.id}`} className="hide-sm">
+                            <Link href={`/utilisateurs/users/edit/${user.id}`} className="hide-sm">
                               <button className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300" title="Modifier">
                                 <PencilIcon className="w-5 h-5" />
                               </button>

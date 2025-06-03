@@ -123,7 +123,7 @@ export default function GroupsPage() {
               />
               <SearchIcon className="w-5 h-5 text-indigo-300 absolute left-3 top-1/2 transform -translate-y-1/2" />
             </div>
-            <Link href="/users-groupes/create">
+            <Link href="/utilisateurs/users-groupes/create">
               <button className="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white rounded-lg transition-all duration-300 shadow font-semibold">
                 <PlusIcon className="w-5 h-5 mr-2" />
                 Nouveau groupe

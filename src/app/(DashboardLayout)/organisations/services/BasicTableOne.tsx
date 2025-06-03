@@ -512,7 +512,7 @@ export default function ServicesPage() {
   };
 
   // Fonction pour gérer la sauvegarde (appel API)
-  const handleSaveService = async (updatedFormData: Partial<Service>) => { // updatedFormData vient du modal
+  const handleSaveService = async (updatedFormData: Partial<Service>) => { 
     const token = Cookies.get('authTokens');
     if (!token || !serviceToEdit) {
       setError("Erreur: Non authentifié ou service non sélectionné pour la modification.");
