@@ -101,7 +101,7 @@ const LogoutPage = () => {
             color="textSecondary"
             sx={{ mt: 3, textAlign: 'center' }}
           >
-            © 2025 LNB. Tous droits réservés.
+            &copy; {new Date().getFullYear()} LNB. Tous droits réservés.
           </Typography>
         </Grid>
       </Grid>

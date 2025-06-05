@@ -18,30 +18,64 @@ import PageContainer from "@/app/(DashboardLayout)/components/container/PageCont
 import { loginUser } from '@/services/auth';
 
 const Login2 = () => {
-  const [credentials, setCredentials] = useState({ identifier: '', password: '' });
+  // États séparés pour chaque champ
+  const [emailOrUsername, setEmailOrUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<{ emailOrUsername?: string; password?: string }>({});
   const router = useRouter();
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setCredentials({ ...credentials, [e.target.name]: e.target.value });
+  // Validation des champs
+  const validateForm = () => {
+    const newErrors: { emailOrUsername?: string; password?: string } = {};
+    
+    if (!emailOrUsername.trim()) {
+      newErrors.emailOrUsername = 'Email ou nom d\'utilisateur requis';
+    }
+    
+    if (!password) {
+      newErrors.password = 'Mot de passe requis';
+    }
+    // else if (password.length < 6) {
+    //   newErrors.password = 'Le mot de passe doit contenir au moins 6 caractères';
+    // }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
     setMessage(null);
     setLoading(true);
 
     try {
-      const response = await loginUser(credentials);
+      const response = await loginUser({ 
+        identifier: emailOrUsername.trim(),
+        password 
+      });
+      console.log(response)
       if (response.success) {
         setMessage({ type: 'success', text: 'Connexion réussie ! Redirection en cours...' });
         router.push('/admin');
       } else {
-        setMessage({ type: 'error', text: response.error || 'Une erreur est survenue.' });
+        setMessage({ 
+          type: 'error', 
+          text: response.error || 'Identifiants incorrects. Veuillez réessayer.' 
+        });
       }
-    } catch {
-      setMessage({ type: 'error', text: 'Erreur lors de la connexion. Veuillez vérifier vos identifiants.' });
+    } catch (error) {
+      console.error('Erreur de connexion:', error);
+      setMessage({ 
+        type: 'error', 
+        text: 'Erreur lors de la connexion. Veuillez réessayer plus tard.' 
+      });
     } finally {
       setLoading(false);
     }
@@ -76,22 +110,29 @@ const Login2 = () => {
               <Stack spacing={2}>
                 <TextField
                   label="Email ou Nom d'utilisateur"
-                  placeholder="Entrer votre email ou username"
+                  placeholder="Entrer votre email ou nom d'utilisateur"
                   fullWidth
                   required
-                  name="identifier"
-                  value={credentials.identifier}
-                  onChange={handleChange}
+                  name="emailOrUsername"
+                  value={emailOrUsername}
+                  onChange={(e) => setEmailOrUsername(e.target.value)}
+                  error={!!errors.emailOrUsername}
+                  helperText={errors.emailOrUsername}
+                  disabled={loading}
                 />
                 <TextField
                   label="Mot de passe"
                   type="password"
+                  sx={{ borderRadius: "15px" }}
                   placeholder="Entrer votre mot de passe"
                   fullWidth
                   required
                   name="password"
-                  value={credentials.password}
-                  onChange={handleChange}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  error={!!errors.password}
+                  helperText={errors.password}
+                  disabled={loading}
                 />
                 <Link href="/auth/forget-password" passHref>
                   <Typography sx={{ color: "#007554", cursor: "pointer", textDecoration: "underline" }}>
@@ -100,7 +141,7 @@ const Login2 = () => {
                 </Link>
                 <Button
                   variant="contained"
-                  sx={{ backgroundColor: "#007554", color: "white", '&:hover': { backgroundColor: "#005f3b" } }}
+                  sx={{ backgroundColor: "#007554",padding: "10px", color: "white", '&:hover': { backgroundColor: "#005f3b" } }}
                   fullWidth
                   type="submit"
                   disabled={loading}
@@ -111,7 +152,7 @@ const Login2 = () => {
             </form>
           </Card>
           <Typography variant="body2" color="textSecondary" sx={{ mt: 3, textAlign: "center" }}>
-            © 2025 LNB. Tous droits réservés.
+            &copy; {new Date().getFullYear()} LNB. Tous droits réservés.
           </Typography>
         </Grid>
       </Grid>

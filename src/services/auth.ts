@@ -27,7 +27,7 @@ interface DetailedError extends AxiosError {
   config?: import('axios').InternalAxiosRequestConfig;
 }
 
-const API_BASE_URL = 'https://www.backend.lnb-intranet.globalitnet.org';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // Nouvelle fonction pour vérifier et rafraîchir automatiquement le token
 export const getValidToken = async () => {
@@ -151,7 +151,7 @@ export const loginUser = async (credentials: { identifier: string; password: str
     console.log('❌ Échec de connexion: tokens manquants dans la réponse');
     return { success: false, error: 'Identifiants invalides' };
 
-  } catch (error: unknown) {
+  } catch (error: any) {
     const typedError = error as DetailedError;
     console.error('💥 Erreur détaillée:', {
       name: typedError.name,
@@ -176,7 +176,7 @@ export const loginUser = async (credentials: { identifier: string; password: str
       }
     });
 
-    return { success: false, error: 'Erreur réseau' };
+    return { success: false, error: error.response.data.detail };
   }
 };
 
